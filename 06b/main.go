@@ -37,7 +37,7 @@ func GetInputData() []string {
 		log.Fatalln(err)
 	}
 
-	input, err := ioutil.ReadFile(dir + "/06a/input.txt")
+	input, err := ioutil.ReadFile(dir + "/06b/input.txt")
 	if err != nil {
 		log.Fatalln(err)
 	}
