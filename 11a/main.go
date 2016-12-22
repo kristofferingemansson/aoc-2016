@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"crypto/md5"
 )
 
 type Pair struct {
@@ -29,12 +30,16 @@ const (
 
 var (
 	Elements = [5]string{THULIUM, PLUTONIUM, STRONTIUM, PROMETHIUM, RUTHENIUM}
-	limit = 5
+	Ticks int64 = 0
+	BuildingStates = map[string]int{}
+	LowestMovescount = 1300000
+	HighestMovescount = 0
 )
 
 func main() {
 	b := Building{}
 	b.Init(4, 0)
+	/*
 	b.floors[0].Add(List{
 		[]string{THULIUM, PLUTONIUM, STRONTIUM}, // generators
 		[]string{THULIUM}, // chips
@@ -47,30 +52,69 @@ func main() {
 		[]string{PROMETHIUM, RUTHENIUM}, // generators
 		[]string{PROMETHIUM, RUTHENIUM}, // chips
 	})
+	*/
 
+	hydrogen := THULIUM
+	lithium := PLUTONIUM
 
+	b.floors[0].Add(List{
+		[]string{}, // generators
+		[]string{hydrogen, lithium}, // chips
+	})
+	b.floors[1].Add(List{
+		[]string{hydrogen}, // generators
+		[]string{}, // chips
+	})
+	b.floors[2].Add(List{
+		[]string{lithium}, // generators
+		[]string{}, // chips
+	})
+
+	/*
 	b.Print()
-
-	//b.Test()
-	x := b
+	x := b.Clone()
 	x.floors[0].Add(List{chips:[]string{PLUTONIUM}})
-	x.Print()
-
 	b.Print()
+	*/
+	b.Tick()
 
-	//b.Tick()
-}
-
-func (b *Building) Test() {
-	x := b
-	x.floors[0].Add(List{chips:[]string{PLUTONIUM}})
-	x.Print()
+	fmt.Println("HighestMovescount: ", HighestMovescount)
+	fmt.Println("LowestMovescount: ", LowestMovescount)
+	fmt.Println("Ticks:", Ticks)
 }
 
 func (b *Building) Tick() {
+	if b.moves > HighestMovescount {
+		HighestMovescount = b.moves
+	}
+
+	Ticks++
+	if !b.IsValid() {
+		return
+	}
+
 	b.Print()
-	limit--
-	if !b.IsValid() || b.IsFinished() || limit <= 0 {
+
+	serial := b.GenerateSerial()
+	movesCount, found := BuildingStates[serial]
+	if found {
+		if movesCount <= b.moves {
+			return
+		}
+		BuildingStates[serial] = b.moves
+	} else {
+		BuildingStates[serial] = b.moves
+	}
+
+	if b.IsFinished() {
+		b.Print()
+		if b.moves < LowestMovescount {
+			LowestMovescount = b.moves
+		}
+		return
+	}
+
+	if (b.moves + 1) >= LowestMovescount {
 		return
 	}
 
@@ -81,7 +125,7 @@ func (b *Building) Tick() {
 	}
 	if b.elevator > 0 {
 		for _, n := range m {
-			next := *b
+			next := b.Clone()
 			next.floors[next.elevator].Remove(n)
 			next.elevator = b.elevator - 1
 			next.floors[next.elevator].Add(n)
@@ -91,7 +135,7 @@ func (b *Building) Tick() {
 	}
 	if b.elevator < (len(b.floors) - 1) {
 		for _, n := range m {
-			next := *b
+			next := b.Clone()
 			next.floors[next.elevator].Remove(n)
 			next.elevator = b.elevator + 1
 			next.floors[next.elevator].Add(n)
@@ -148,8 +192,9 @@ func (b *Building) Print() {
 	if b.IsValid() {
 		fmt.Print("Valid. ")
 	} else {
-		fmt.Print("Invalid.")
+		fmt.Print("Invalid. ")
 	}
+	fmt.Print(b.GenerateSerial())
 	fmt.Print("\n\n")
 }
 
@@ -313,4 +358,30 @@ func (l *LList) Print() {
 		}
 	}
 	fmt.Print("\n}")
+}
+
+func (b *Building) GenerateSerial() string {
+	key := fmt.Sprintf("%v", b.elevator)
+	for _, floor := range b.floors {
+		key += ":"
+		for _, el := range Elements {
+			pair := floor[el]
+			key += fmt.Sprintf("%v%v", pair.chip, pair.generator)
+		}
+	}
+	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
+}
+
+func (b *Building) Clone() Building {
+	n := Building{}
+	n.elevator = b.elevator
+	n.moves = b.moves
+	n.floors = make([]Floor, len(b.floors))
+	for k, v := range b.floors {
+		n.floors[k] = Floor{}
+		for l, w := range v {
+			n.floors[k][l] = w
+		}
+	}
+	return n
 }
