@@ -26,13 +26,15 @@ const (
 	STRONTIUM = "Sr"
 	PROMETHIUM = "Pm"
 	RUTHENIUM = "Ru"
+	ELERIUM = "El"
+	DILITHIUM = "Di"
 )
 
 var (
-	Elements = [5]string{THULIUM, PLUTONIUM, STRONTIUM, PROMETHIUM, RUTHENIUM}
+	Elements = [7]string{THULIUM, PLUTONIUM, STRONTIUM, PROMETHIUM, RUTHENIUM, ELERIUM, DILITHIUM}
 	Ticks int64 = 0
 	BuildingStates = map[string]int{}
-	LowestMovescount = 50
+	LowestMovescount = 100
 	HighestMovescount = 0
 )
 
@@ -40,10 +42,9 @@ func main() {
 	b := Building{}
 	b.Init(4, 0)
 
-	//Problem
 	b.floors[0].Add(List{
-		[]string{THULIUM, PLUTONIUM, STRONTIUM}, // generators
-		[]string{THULIUM}, // chips
+		[]string{THULIUM, PLUTONIUM, STRONTIUM, ELERIUM, DILITHIUM}, // generators
+		[]string{THULIUM, ELERIUM, DILITHIUM}, // chips
 	})
 	b.floors[1].Add(List{
 		[]string{}, // generators
@@ -54,40 +55,6 @@ func main() {
 		[]string{PROMETHIUM, RUTHENIUM}, // chips
 	})
 
-/*
-	hydrogen := THULIUM
-	lithium := PLUTONIUM
-
-	b.floors[0].Add(List{
-		[]string{}, // generators
-		[]string{hydrogen, lithium}, // chips
-	})
-	b.floors[1].Add(List{
-		[]string{hydrogen}, // generators
-		[]string{}, // chips
-	})
-	b.floors[2].Add(List{
-		[]string{lithium}, // generators
-		[]string{}, // chips
-	})
-*/
-/*
-	b.elevator = 2
-	b.floors[2].Add(List{
-		[]string{hydrogen, lithium}, // generators
-		[]string{hydrogen}, // chips
-	})
-	b.floors[3].Add(List{
-		[]string{}, // generators
-		[]string{lithium}, // chips
-	})
-*/
-	/*
-	b.Print()
-	x := b.Clone()
-	x.floors[0].Add(List{chips:[]string{PLUTONIUM}})
-	b.Print()
-	*/
 	b.Tick()
 
 	fmt.Println("HighestMovescount: ", HighestMovescount)
@@ -183,6 +150,8 @@ func (b *Building) Init(floors int, elevator int) {
 			STRONTIUM: Pair{},
 			PROMETHIUM: Pair{},
 			RUTHENIUM: Pair{},
+			ELERIUM: Pair{},
+			DILITHIUM: Pair{},
 		}
 	}
 	b.elevator = elevator
